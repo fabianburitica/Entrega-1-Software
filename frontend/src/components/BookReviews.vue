@@ -52,9 +52,7 @@ function formatDate(iso?: string): string {
             class="w-full border border-gray-300 rounded py-2 px-3 focus:outline-none focus:ring focus:border-blue-300"
             required
           >
-            <option v-for="n in 5" :key="n" :value="n">
-              {{ n }} star{{ n > 1 ? 's' : '' }}
-            </option>
+            <option v-for="n in 5" :key="n" :value="n">{{ n }} star{{ n > 1 ? 's' : '' }}</option>
           </select>
         </div>
         <div>
