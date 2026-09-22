@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { ReviewService } from '@/services/ReviewService.js';
+import type { ReviewInterface } from '@/interfaces/ReviewInterface.js';
 
 const props = defineProps<{
   bookId: number;
 }>();
 
-const reviews = computed(() => ReviewService.getReviewsByBookId(props.bookId));
+const reviews = ref<ReviewInterface[]>([]);
 
 const form = ref({
   rating: 5,
@@ -14,36 +15,48 @@ const form = ref({
   author: '',
 });
 
-function submitReview() {
-  if (!form.value.comment.trim()) return;
+const isSubmitting = ref(false);
 
-  ReviewService.createReview({
+async function submitReview() {
+  if (!form.value.comment.trim()) return;
+  isSubmitting.value = true;
+  await ReviewService.createReview({
     bookId: props.bookId,
     rating: Math.min(5, Math.max(1, form.value.rating)),
     comment: form.value.comment.trim(),
     author: form.value.author.trim() || undefined,
   });
-
   form.value = { rating: 5, comment: '', author: '' };
+  isSubmitting.value = false;
+
+  getReviews();
 }
 
 function formatDate(iso?: string): string {
   if (!iso) return '';
-
   return new Date(iso).toLocaleDateString('es-CO', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
   });
 }
+
+async function getReviews() {
+  reviews.value = await ReviewService.getReviewsByBookId(props.bookId);
+}
+
+onMounted(() => {
+  getReviews();
+});
 </script>
 
 <template>
   <div class="space-y-6">
     <h3 class="text-lg font-semibold text-gray-800">Reviews</h3>
+
     <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
       <h4 class="text-sm font-medium text-gray-700 mb-3">Add a review</h4>
-      <form class="space-y-3" @submit.prevent="submitReview">
+      <form @submit.prevent="submitReview" class="space-y-3">
         <div>
           <label for="rating" class="block text-sm text-gray-600 mb-1">Rating</label>
           <select
@@ -78,13 +91,14 @@ function formatDate(iso?: string): string {
         </div>
         <button
           type="submit"
-          :disabled="!form.comment.trim()"
+          :disabled="isSubmitting || !form.comment.trim()"
           class="bg-blue-600 text-white font-medium py-2 px-4 rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
         >
           Post review
         </button>
       </form>
     </div>
+
     <ul class="space-y-4">
       <li
         v-for="review in reviews"
