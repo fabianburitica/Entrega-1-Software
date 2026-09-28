@@ -15,7 +15,7 @@ import { BooksModule } from './books/books.module.js';
 
       type: 'better-sqlite3', 
 
-      database: 'database.sqlite', 
+      database: process.env.SQLITE_PATH ?? 'database.sqlite',
 
       autoLoadEntities: true, 
 
@@ -30,4 +30,4 @@ import { BooksModule } from './books/books.module.js';
 
 }) 
 
-export class AppModule {} 
+export class AppModule {}
